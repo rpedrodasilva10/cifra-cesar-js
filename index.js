@@ -11,49 +11,37 @@ const fileName = "./answer.json";
 
 processChallenge(fileName, TOKEN);
 
-//readFileAndDecrypt(fileName);
 async function processChallenge(fileName, TOKEN) {
-  await getAndSaveContent(TOKEN, fileName);
-  readFileAndDecrypt(fileName);
-  sendAnswer(fileName, TOKEN);
+  let json = await getChallengeContent(TOKEN);
+  json = JSON.stringify(decryptJson(json), null, 2);
+
+  saveFile(fileName, json);
+  await sendAnswer(fileName, TOKEN);
 }
-async function getAndSaveContent(token, fileName) {
-  const response = await axios.get(
+async function getChallengeContent(token) {
+  let response = await axios.get(
     `https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token=${token}`
   );
 
-  saveFile(fileName, JSON.stringify(response.data));
+  return response.data;
 }
 
 function saveFile(fileName, data) {
-  fs.writeFile(`./${fileName}`, data, err => {
-    if (err) {
-      return console.log(err);
-    }
-    console.log("File saved");
-  });
+  fs.writeFileSync(`./${fileName}`, data, "utf8");
 }
 
-function readFileAndDecrypt(fileName) {
-  fs.readFile(fileName, "utf8", (err, jsonString) => {
-    if (err) {
-      console.log("File read failed:", err);
-      return;
-    }
+function decryptJson(json) {
+  const { cifrado, numero_casas } = json;
 
-    const json = JSON.parse(jsonString);
-    const { cifrado, numero_casas } = json;
-    const decrypted = decryptString(cifrado, numero_casas);
-    // Gero resumo SHA1
-    const resumo = SHA1(decrypted).toString();
-    const newJson = {
-      ...json,
-      decifrado: decrypted,
-      resumo_criptografico: resumo
-    };
-
-    saveFile(fileName, JSON.stringify(newJson, null, 2));
-  });
+  const decrypted = decryptString(cifrado, numero_casas);
+  // Gero resumo SHA1
+  const resumo = SHA1(decrypted).toString();
+  const newJson = {
+    ...json,
+    decifrado: decrypted,
+    resumo_criptografico: resumo
+  };
+  return newJson;
 }
 
 function decryptString(string, step) {
@@ -72,9 +60,9 @@ function decryptString(string, step) {
 
 async function sendAnswer(fileName, token) {
   const form = new FormData();
-  const file = fs.createReadStream(fileName);
+  const file = fs.readFileSync(fileName, "utf8"); //fs.createReadStream(fileName, (encoding = "utf8"));
 
-  form.append("answer", file);
+  form.append("answer", file, (type = "file"));
 
   const resp = await axios.post(
     `https://api.codenation.dev/v1/challenge/dev-ps/submit-solution?token=${token}`,
@@ -87,5 +75,7 @@ async function sendAnswer(fileName, token) {
     err => console.log(err)
   );
   console.log(resp.data);
+
+  fs.unlinkSync(fileName);
   saveFile("output.json", JSON.stringify(resp.data, null, 2));
 }
