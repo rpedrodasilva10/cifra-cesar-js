@@ -1,6 +1,3 @@
-<h1 align="center">
-    <img href="https://codenation.dev/" alt="Code:Nation" src="https://codenation.dev/_nuxt/img/9bd98ba.svg" width="200px" />
-</h1>
 <p align="center">
   <img alt="GitHub language count" src="https://img.shields.io/github/languages/count/rpedrodasilva10/cifra-cesar-js?color=%2304D361">
    <img alt="License" src="https://img.shields.io/badge/license-MIT-%2304D361">
