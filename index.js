@@ -26,10 +26,6 @@ async function getChallengeContent(token) {
   return response.data;
 }
 
-function saveFile(fileName, data) {
-  fs.writeFileSync(`./${fileName}`, data, "utf8");
-}
-
 function decryptJson(json) {
   const { cifrado, numero_casas } = json;
 
@@ -51,16 +47,21 @@ function decryptString(string, step) {
       if (char === " " || char === "." || (char >= 0 && char <= 9)) return char;
       else {
         newCode = alphabet.indexOf(char) - step;
-        // Caso ultrapasse para menos, somo as possibilidades
+
+        // Caso o código esteja fora do range, gero rotação para obter o valor válido
         return alphabet[newCode < 0 ? newCode + 26 : newCode % 26];
       }
     })
     .join("");
 }
 
+function saveFile(fileName, data) {
+  fs.writeFileSync(`./${fileName}`, data, "utf8");
+}
+
 async function sendAnswer(fileName, token) {
   const form = new FormData();
-  const file = fs.readFileSync(fileName, "utf8"); //fs.createReadStream(fileName, (encoding = "utf8"));
+  const file = fs.readFileSync(fileName, "utf8");
 
   form.append("answer", file, (type = "file"));
 
